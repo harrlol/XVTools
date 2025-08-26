@@ -1,0 +1,10 @@
+numpy
+scipy 
+pandas
+anndata 
+scanpy>=1.11.1
+h5py
+matplotlib
+tqdm
+google-cloud-storage>=3.2.0
+google-auth>=2.40.3
