@@ -1,11 +1,21 @@
-import os
+import pandas as pd
+import matplotlib.pyplot as plt
+import datetime
+import numpy as np
 import os.path as osp
 import subprocess
 import fnmatch
+import os
 import urllib.request
+import glob
 from tqdm import tqdm
 from google.oauth2 import service_account
 from google.cloud import storage
+
+try:
+    r_script_path = os.environ["R_HELPER"]
+except KeyError:
+    raise RuntimeError("Environment variable R_HELPER must be set!")
 
 
 def auto_expand(path):
@@ -15,6 +25,14 @@ def auto_expand(path):
     if '~' in path:
         return osp.expanduser(path)
     return path
+
+## Google Cloud Storage helpers ##
+def parse_gs_path_helper(gs_path):
+    assert gs_path.startswith("gs://"), "Not a valid GCS path"
+    path_parts = gs_path[5:].split("/", 1)
+    bucket = path_parts[0]
+    prefix = path_parts[1] if len(path_parts) > 1 else ""
+    return bucket, prefix
 
 
 def download_terra_data(SECRET, gcs_dir, local_dir, 
@@ -62,7 +80,118 @@ def download_terra_data(SECRET, gcs_dir, local_dir,
 
     return
 
+## anndata/infercnv helpers ##
+def h5ad_to_matrix(adata):
+    expr = adata.raw.X if adata.raw is not None else adata.X
+    if not isinstance(expr, np.ndarray):
+        expr = expr.toarray() 
+    df = pd.DataFrame(expr.T,
+                      index=adata.var_names,
+                      columns=adata.obs_names)
+    return df
 
+
+def extract_infercnv_sampleann(adata, cell_type_col="cell_type", auto_infer=True):
+    """ 
+    Extracts sample annotations for InferCNV from an AnnData object.
+    Will not distinguish between different normal cell types
+    Assumes that we malignant cells are labeled with "malignant" in the specified cell_type_col.
+    """
+
+    labels = adata.obs[cell_type_col].astype(str)
+    if auto_infer:
+        is_malignant = labels.str.lower().str.contains("malignant")
+        annotated_labels = labels.copy()
+        annotated_labels[is_malignant] = "malignant"
+        annotated_labels[~is_malignant] = "normal"
+    else:
+        # if auto_infer is False, we assume the labels are already in the correct format
+        annotated_labels = labels
+
+    sample_annotations = pd.DataFrame({
+        'cell_id': adata.obs_names,
+        'label': annotated_labels
+    })
+
+    return sample_annotations
+
+
+def cnv_state_cnt(cluster_geno, save_path=None, show=False):
+    """
+    Count how many times each state appears for each grouping in a given infercnv result
+    """
+    level_counts = cluster_geno.apply(pd.Series.value_counts, axis=1).fillna(0).astype(int)
+    level_counts.plot(kind="bar", stacked=True, figsize=(12, 6))
+    plt.xlabel("Row")
+    plt.ylabel("Count of Levels")
+    plt.title("Count of Float Levels per Row")
+    plt.legend(title="Level")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    if save_path:
+        plt.savefig(auto_expand(save_path))
+    if show:
+        plt.show()
+    plt.close()
+
+    return
+
+
+def store_infercnv_in_adata(adata, infercnv_out_path):
+    """ 
+    Store inferCNV results in the AnnData object.
+    """
+
+    # parse infercnv output
+    pat = "HMM_CNV_predictions.*_genes.dat"
+    infercnv_files = glob.glob(os.path.join(infercnv_out_path, pat))
+    if len(infercnv_files) == 0:
+        raise ValueError("No inferCNV files found in the specified directory. Please check the path and pattern.")
+    
+    # grouping to cnv
+    infercnv_df = pd.read_csv(infercnv_files[0], sep="\t")
+    sub_infercnv_df = infercnv_df[['cell_group_name', 'state', 'gene']]
+    collapsed = sub_infercnv_df.groupby('cell_group_name').apply(lambda x: dict(zip(x['gene'], x['state']))).to_dict()
+    cluster_geno = pd.DataFrame(collapsed).T
+    cluster_geno.index = cluster_geno.index.str.split(".", n=1).str[1]
+
+    # matching/expanding to adata genes, qc
+    cluster_geno_expanded = cluster_geno.reindex(columns=adata.var_names, fill_value=np.nan)
+    dropped_genes = cluster_geno.columns.difference(adata.var_names)
+    if len(dropped_genes) > 0:
+        print(f"[inferCNV] Dropped {len(dropped_genes)} genes not found in adata.var_names:\n{', '.join(dropped_genes[:10])}...")
+
+    cnv_state_cnt(cluster_geno_expanded, save_path=osp.join(infercnv_out_path, "infer_cnv_state_freq_by_group.png"))
+
+    # cell to grouping
+    pat = "infercnv.observation_groupings.txt"
+    infercnv_groupings_files = glob.glob(os.path.join(infercnv_out_path, pat))
+    if len(infercnv_groupings_files) == 0:
+        raise ValueError("No inferCNV groupings files found in the specified directory. Please check the path and pattern.")
+    infercnv_groupings_df = pd.read_csv(infercnv_groupings_files[0], sep=" ")
+    sub_infercnv_groupings_df = infercnv_groupings_df[['Dendrogram Group']]
+
+    # to prevent "Dendrogram Group_x" from being created
+    if 'Dendrogram Group' in adata.obs.columns:
+        adata.obs = adata.obs.drop(columns=['Dendrogram Group'])
+
+    # merge the infercnv groupings into the adata obs
+    adata.obs = adata.obs.merge(sub_infercnv_groupings_df, left_index=True, right_index=True, how='left')
+    valid_mask = adata.obs['Dendrogram Group'].notna()
+    valid_groups = adata.obs.loc[valid_mask, 'Dendrogram Group']
+
+    # add to obs
+    # store the CNV states by cell in the adata obsm
+    cnv_matrix = np.full((adata.n_obs, cluster_geno_expanded.shape[1]), np.nan)  # initialize with NaN
+    cnv_matrix[valid_mask.values] = cluster_geno_expanded.loc[valid_groups].values
+    adata.obsm["cnv_states"] = cnv_matrix
+
+    # also store grouping_to_cnv_state in uns
+    adata.uns["cnv_group_to_states"] = cluster_geno_expanded
+
+    return adata
+
+## main function
 def infercnv(adata, infercnv_out_path=None, cell_type_col="cell_type", auto_infer=True, gene_ordering_file=None, 
              cutoff=0.1, denoise=True, HMM=True, cluster_by_groups=True, num_threads=4):
     """
@@ -109,8 +238,6 @@ def infercnv(adata, infercnv_out_path=None, cell_type_col="cell_type", auto_infe
         gene_order_path = osp.abspath(osp.join(infercnv_out_path, "gene_order.txt"))
         urllib.request.urlretrieve("https://data.broadinstitute.org/Trinity/CTAT/cnv/hg38_gencode_v27.txt", gene_order_path)
 
-    # note the script location is hard coded!
-    r_script_path = osp.abspath(osp.join(osp.dirname(__file__), "../../R/src/infercnv_helper.R"))
     # subprocess call of R script
     rscript_cmd = [
         "Rscript",
