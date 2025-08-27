@@ -1,4 +1,4 @@
-Ex Vivo internal API application for running inferCNV on Microsoft compute
+Ex Vivo internal API application for running InferCNV on Microsoft compute
 
 ## Installation and Usage
 
