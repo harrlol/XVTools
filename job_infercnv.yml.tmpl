@@ -1,0 +1,48 @@
+description: ${JOB_NAME}
+target:
+  service: sing
+  name: msrresrchvc
+  workspace_name: exvivo
+environment:
+  image: exvivo_harry/infercnv_azure_api:latest
+  username: f3aabc9162314425972546881fd63c82
+  registry: f3aabc9162314425972546881fd63c82.azurecr.io
+storage:
+  data:
+    storage_account_name: exvivocoldeastus
+    container_name: projects
+    mount_dir: /mnt/outputs
+    # local_dir: /home/b-harryli
+  output:
+    storage_account_name: exvivocoldeastus
+    container_name: data
+    mount_dir: /mnt/data
+    # local_dir: /home/b-harryli
+# code:
+#   local_dir: /home/b-harryli/harry_xvsearch
+search:
+  job_template:
+    name: "{experiment_name:s}_{auto:3s}"
+    sku: 8C60
+    priority: high
+    sla_tier: Premium
+    command:
+      - bash -lc "echo 'Container started successfully'; R --version || true; python3 --version || true; ls -l /app/src/InfercnvAzureAPI || true"
+      - bash -lc "python3 -u /app/src/InfercnvAzureAPI/cli.py \
+          --h5ad_folder \"$DATA_FOLDER\" \
+          --out_folder \"$OUT_FOLDER\" \
+          --n_parallel \"$N_PARALLEL\" \
+          --cell_type_col \"{CELL_TYPE_COL}\""
+    submit_args:
+      env:
+        _AZUREML_SINGULARITY_JOB_UAI: /subscriptions/f997cb3f-f3db-4cfb-ab69-c013ff38b1fd/resourcegroups/ex-vivo-biomlinterns/providers/Microsoft.ManagedIdentity/userAssignedIdentities/ex-vivo-biomlinterns-uai
+    tags: [Project_Name:Biomedical_ML,ProjectID:PRJ-0045-A32,Experiment:Bio-0]
+  type: grid
+  max_trials: 1
+  params:
+    - name: CELL_TYPE_COL
+      values: ["cell_type_infercnv"]
+
+
+
+
