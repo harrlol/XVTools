@@ -4,7 +4,7 @@ target:
   name: msrresrchvc
   workspace_name: exvivo
 environment:
-  image: exvivo_harry/infercnv_azure_api:latest
+  image: exvivo_harry/infercnv_azure_api:alpha
   username: f3aabc9162314425972546881fd63c82
   registry: f3aabc9162314425972546881fd63c82.azurecr.io
 storage:
@@ -12,14 +12,12 @@ storage:
     storage_account_name: exvivocoldeastus
     container_name: projects
     mount_dir: /mnt/outputs
-    # local_dir: /home/b-harryli
+    local_dir: ${DATA_FOLDER}
   output:
     storage_account_name: exvivocoldeastus
     container_name: data
     mount_dir: /mnt/data
-    # local_dir: /home/b-harryli
-# code:
-#   local_dir: /home/b-harryli/harry_xvsearch
+    local_dir: ${OUT_FOLDER}
 search:
   job_template:
     name: "{experiment_name:s}_{auto:3s}"
@@ -28,6 +26,7 @@ search:
     sla_tier: Premium
     command:
       - bash -lc "echo 'Container started successfully'; R --version || true; python3 --version || true; ls -l /app/src/InfercnvAzureAPI || true"
+      - bash -lc 'echo "files in /mnt/data:"; ls -lh /mnt/data | head -n 100'
       - bash -lc "python3 -u /app/src/InfercnvAzureAPI/cli.py \
           --h5ad_folder \"$DATA_FOLDER\" \
           --out_folder \"$OUT_FOLDER\" \

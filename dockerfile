@@ -7,10 +7,10 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 # base R and python
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential wget curl git ca-certificates tzdata locales \
+    tar netbase ca-certificates coreutils \
+    build-essential wget curl git  tzdata locales \
     python3 python3-pip python3-venv \
-    r-base \
-    libcurl4-openssl-dev libssl-dev libxml2-dev \
+    r-base libcurl4-openssl-dev libssl-dev libxml2-dev \
     libhdf5-dev zlib1g-dev libbz2-dev liblzma-dev \
     libpng-dev libcairo2-dev \
     libzstd-dev \

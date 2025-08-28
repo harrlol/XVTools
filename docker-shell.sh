@@ -1,16 +1,17 @@
 #!/bin/bash
 #set -e
 
+mkdir -p user_runs
+
 # environment variables
-export BASE_DIR=$(pwd)
 export SECRETS_DIR=$(pwd)/../secrets
 export JOB_NAME="infercnv_test_$(TZ=America/New_York date +'%Y%m%d_%H%M%S')"
 export DATA_FOLDER="/home/b-harryli/workspace/tmp_infercnv_adata"
 export N_PARALLEL=4
-export OUT_FOLDER="tmp_out_8_27"
+export OUT_FOLDER="user_runs/${JOB_NAME}"
 
-
-envsubst < job_infercnv.yml.tmpl > job_infercnv.resolved.yml
+mkdir -p "$OUT_FOLDER"
+envsubst < job_infercnv.yml.tmpl > "$OUT_FOLDER"/job_infercnv.resolved.yml
 
 # sh file that loads necessary paths into yml
-amlt run job_infercnv.resolved.yml -d "$JOB_NAME"
+amlt run "$OUT_FOLDER"/job_infercnv.resolved.yml -d "$JOB_NAME"

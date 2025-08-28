@@ -1,0 +1,8 @@
+# ignore per-run artifacts
+user_runs/*
+
+# ignore any resolved YAMLs anywhere
+*.resolved.yml
+
+# do not lose track of templates
+!*.yml.tmpl
