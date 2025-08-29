@@ -18,13 +18,14 @@ usage() {
   echo "  -N   Optional job name (default: infercnv_azure_<timestamp>)"
   echo "  -P   Optional process parallelism (default: 4)"
   echo "  -T   Optional threads per process (default: 4)"
+  echo "  -R   Optional reference group names, space-separated (default: normal)"
   echo "  -h   Show this help"
 }
 
 # Parse flags
 DATA_FOLDER=""
 OUT_FOLDER=""
-while getopts ":I:O:N:P:T:h" opt; do
+while getopts ":I:O:N:P:R:T:h" opt; do
   case "$opt" in
     I) DATA_FOLDER="$OPTARG" ;;
     O) OUT_FOLDER="$OPTARG" ;;

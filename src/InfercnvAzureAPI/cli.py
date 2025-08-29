@@ -83,7 +83,7 @@ def main(args=None):
 
     infercnv_kwargs = {
         k: getattr(args, k)
-        for k in ("cutoff", "denoise", "HMM", "cluster_by_groups", "ref_group_names")
+        for k in ("cutoff", "denoise", "HMM", "ref_group_names")
     }
 
     tasks = [
