@@ -4,7 +4,10 @@ Ex Vivo internal API application for running InferCNV on Microsoft compute
 
 ```
 git clone https://github.com/harrlol/InfercnvAzureAPI.git
-. ./docker-shell.sh
+cd InfercnvAzureAPI
+./docker-shell.sh \
+  -I PATH_TO_DATA_FOLDER \
+  -O PATH_TO_OUTPUT_FOLDER
 ```
 
 ## Considerations on Parallelization
