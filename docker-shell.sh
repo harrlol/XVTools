@@ -1,5 +1,5 @@
 #!/bin/bash
-set -Eeuo pipefail
+# set -e pipefail
 
 t_start="$(TZ=America/New_York date +'%Y%m%d_%H%M%S')"
 JOB_NAME="infercnv_azure_${t_start}"
@@ -34,7 +34,7 @@ done
 shift $((OPTIND-1))
 
 # check required arguments
-[[ -n "$DATA_FOLDER" && -n "$OUT_FOLDER" ]] || { echo "Error: -I and -O are required."; usage; exit 2; }
+[[ -n "$DATA_FOLDER" && -n "$OUT_FOLDER" ]] || { echo "Error: -I and -O are required."; usage; exit 1; }
 
 [[ -d "$DATA_FOLDER" ]] || { echo "Error: DATA_FOLDER does not exist: $DATA_FOLDER" >&2; exit 1; }
 mkdir -p "$OUT_FOLDER"
@@ -54,7 +54,7 @@ azcopy sync "$DATA_FOLDER" \
 echo "[Local] Uploaded data from $DATA_FOLDER to Azure Blob Storage."
 
 # sh file that loads necessary paths into yml
-amlt run "$OUT_FOLDER"/job_infercnv.resolved.yml "$JOB_NAME" -d "$JOB_NAME" 
+amlt run "$OUT_FOLDER"/job_infercnv.resolved.yml --replace "$JOB_NAME" -d "$JOB_NAME" 
 echo "[Local] Submitted AML job: $JOB_NAME"
 echo "[Local] This program will check job status every 2 minutes..."
 
@@ -64,24 +64,31 @@ while true; do
     S="$(amlt status "$JOB_NAME")"
     if echo "$S" | grep -qE "queued|scheduling|preparing|starting|running"; then
         echo "[$T] status check"
-        echo "-------most recent log-------"
-        echo "$(amlt logs "$JOB_NAME" --tail 10)"
-        echo "-----------------------------"
+        # echo "-------most recent log-------"
+        # { amlt logs "$JOB_NAME" 2>/dev/null || true; } | tail -n 20
+        # echo "-----------------------------"
         sleep 120
     elif echo "$S" | grep -qE "failed|canceled"; then
         echo "[$T] job failed, exiting"
-        exit 1
+        CONT=0
+        break
     elif echo "$S" | grep -qE "completed"; then
         echo "[$T] job completed, proceeding to download results"
+        CONT=1
         break
     else
         echo "[$T] status not recognized, exiting"
-        exit 1
+        CONT=0
+        break
     fi
 done
 
-# download results from Azure Blob Storage
-azcopy sync \
-  "https://exvivocoldeastus.blob.core.windows.net/projects/Projects/broad_infercnv_out/${JOB_NAME}?<SAS_TOKEN>" \
-  "$OUT_FOLDER" \
-  --recursive --delete-destination=false
+if [[ $CONT -eq 0 ]]; then
+    echo "[Local] Job did not complete successfully. Please check the AML portal for details."
+else
+  # download results from Azure Blob Storage
+  azcopy sync \
+    "https://exvivocoldeastus.blob.core.windows.net/projects/Projects/broad_infercnv_out/${JOB_NAME}?<SAS_TOKEN>" \
+    "$OUT_FOLDER" \
+    --recursive --delete-destination=false
+fi
