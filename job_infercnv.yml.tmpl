@@ -4,34 +4,31 @@ target:
   name: msrresrchvc
   workspace_name: exvivo
 environment:
-  image: exvivo_harry/infercnv_azure_api:alpha
+  image: exvivo_harry/infercnv_azure_api:beta
   username: f3aabc9162314425972546881fd63c82
   registry: f3aabc9162314425972546881fd63c82.azurecr.io
 storage:
   data:
     storage_account_name: exvivocoldeastus
-    container_name: projects
-    mount_dir: /mnt/outputs
-    local_dir: ${DATA_FOLDER}
-  output:
-    storage_account_name: exvivocoldeastus
     container_name: data
     mount_dir: /mnt/data
-    local_dir: ${OUT_FOLDER}
+    # local_dir: ${HOME}
+  output:
+    storage_account_name: exvivocoldeastus
+    container_name: projects
+    mount_dir: /mnt/outputs
+    # local_dir: ${HOME}
 search:
   job_template:
     name: "{experiment_name:s}_{auto:3s}"
+    # change here for when E64ads_v5 is busy
     sku: 8C60
+    # sku: 10C3
     priority: high
     sla_tier: Premium
     command:
-      - bash -lc "echo 'Container started successfully'; R --version || true; python3 --version || true; ls -l /app/src/InfercnvAzureAPI || true"
-      - bash -lc 'echo "files in /mnt/data:"; ls -lh /mnt/data | head -n 100'
-      - bash -lc "python3 -u /app/src/InfercnvAzureAPI/cli.py \
-          --h5ad_folder \"$DATA_FOLDER\" \
-          --out_folder \"$OUT_FOLDER\" \
-          --n_parallel \"$N_PARALLEL\" \
-          --cell_type_col \"{CELL_TYPE_COL}\""
+      - echo '[Azure] Container started successfully'
+      - python3 -u /app/src/InfercnvAzureAPI/cli.py --data_folder /mnt/data/broad_infercnv_data/${JOB_NAME} --out_folder /mnt/outputs/Projects/broad_infercnv_out/${JOB_NAME} --n_parallel $N_PARALLEL --n_threads $N_THREADS --cell_type_col {CELL_TYPE_COL}
     submit_args:
       env:
         _AZUREML_SINGULARITY_JOB_UAI: /subscriptions/f997cb3f-f3db-4cfb-ab69-c013ff38b1fd/resourcegroups/ex-vivo-biomlinterns/providers/Microsoft.ManagedIdentity/userAssignedIdentities/ex-vivo-biomlinterns-uai
