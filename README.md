@@ -13,7 +13,11 @@ git clone https://github.com/harrlol/InfercnvAzureAPI.git
 cd InfercnvAzureAPI
 . ./docker-shell.sh \
   -I PATH_TO_DATA_FOLDER \
-  -O PATH_TO_OUTPUT_FOLDER
+  -O PATH_TO_OUTPUT_FOLDER \
+  # below is optional
+  -N JOB_NAME \
+  -P N_PARALLEL \
+  -T N_THREADS
 ```
 
 ## Considerations on Parallelization
