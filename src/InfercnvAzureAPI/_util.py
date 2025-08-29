@@ -226,7 +226,7 @@ def prep_h5ad_for_infercnv(adata, infercnv_out_path, cell_type_col="cell_type", 
 
 ## main function
 def call_infercnv(matrix_path, sample_annotations_path, gene_order_path, infercnv_out_path, adata=None,
-             cutoff=0.1, denoise=True, HMM=True, cluster_by_groups=True, num_threads=4):
+             cutoff=0.1, denoise=True, HMM=True, cluster_by_groups=True, num_threads=4, ref_group_names=["normal"]):
     """
     Run inferCNV with the provided mtx/annotations/gene_ordering files.
     """
@@ -240,6 +240,7 @@ def call_infercnv(matrix_path, sample_annotations_path, gene_order_path, infercn
         "--gene_order", gene_order_path,
         "--out_dir", infercnv_out_path,
         "--cutoff", str(cutoff),
+        "--ref_group_names", *ref_group_names 
     ]
 
     # add additional parameters if specified

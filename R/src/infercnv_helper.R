@@ -17,6 +17,7 @@ parser$add_argument("--denoise", type="logical", default=TRUE, help="Denoise the
 parser$add_argument("--HMM", type="logical", default=TRUE, help="Use HMM (default: TRUE)")
 parser$add_argument("--cluster_by_groups", type="logical", default=TRUE, help="Cluster by groups (default: TRUE)")
 parser$add_argument("--num_threads", type="integer", default=4, help="Number of threads to use (default: 4)")
+parser$add_argument("--ref_group_names", nargs="+", default=c("normal"), help="Reference group names (default: normal)")
 
 args <- parser$parse_args()
 
@@ -27,7 +28,7 @@ infercnv_obj <- CreateInfercnvObject(
   annotations_file  = args$annotations,
   delim             = "\t",
   gene_order_file   = args$gene_order,
-  ref_group_names   = c("normal")
+  ref_group_names   = args$ref_group_names
 )
 
 # run infercnv

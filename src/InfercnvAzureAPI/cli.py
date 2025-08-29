@@ -5,7 +5,7 @@ from pathlib import Path
 from _util import *
 from multiprocessing import Pool
 
-def _worker(f_path, out_folder, cell_type_col, num_threads, worker_msg):
+def _worker(f_path, out_folder, cell_type_col, num_threads, worker_msg, **kwargs):
     f_path = Path(f_path)
     sample_name = f_path.stem
     infercnv_out_path = Path(out_folder) / sample_name
@@ -44,7 +44,7 @@ def _worker(f_path, out_folder, cell_type_col, num_threads, worker_msg):
     # pass paths to infercnv
     print(f"[Azure] Starting infercnv for {sample_name} ...")
     adata = call_infercnv(matrix_path, sample_annotations_path, gene_order_path, str(infercnv_out_path), 
-                          adata=adata, num_threads=num_threads)
+                          adata=adata, num_threads=num_threads, **kwargs)
 
     # adata is not none only in h5ad mode
     if adata is not None:
@@ -53,6 +53,9 @@ def _worker(f_path, out_folder, cell_type_col, num_threads, worker_msg):
         adata.write_h5ad(out_h5ad, compression="gzip")
 
     return sample_name
+
+def _worker_wrapper(f_path, out_folder, cell_type_col, num_threads, worker_msg, infercnv_kwargs):
+    return _worker(f_path, out_folder, cell_type_col, num_threads, worker_msg, **infercnv_kwargs)
 
 def main(args=None):
     print("[Azure] CLI Arguments", args)
@@ -78,9 +81,18 @@ def main(args=None):
         "[Azure] No .h5ad or .mtx files found in input folder."
     )
 
-    tasks = [(str(f), args.out_folder, args.cell_type_col, args.n_threads, worker_msg) for f in f_list]
+    infercnv_kwargs = {
+        k: getattr(args, k)
+        for k in ("cutoff", "denoise", "HMM", "cluster_by_groups", "ref_group_names")
+    }
+
+    tasks = [
+        (str(f), args.out_folder, args.cell_type_col, args.n_threads, worker_msg, infercnv_kwargs)
+        for f in f_list
+    ]
+
     with Pool(processes=args.n_parallel) as pool:
-        for name in pool.starmap(_worker, tasks):
+        for name in pool.starmap(_worker_wrapper, tasks):
             print(f"✔ finished: {name}")
 
 
@@ -93,6 +105,13 @@ if __name__ == "__main__":
     parser.add_argument("--n_parallel", type=int, required=True, help="Number of samples to process in parallel")
     parser.add_argument("--n_threads", type=int, default=4, help="Number of threads allowed per sample")
     parser.add_argument("--cell_type_col", type=str, default="cell_type_infercnv", help="Column name for cell type")
+    # infercnv parameters
+    parser.add_argument("--cutoff", type=float, default=0.1, help="Cutoff for infercnv (default: 0.1)")
+    parser.add_argument("--denoise", action="store_true", default=True)
+    parser.add_argument("--no-denoise", dest="denoise", action="store_false")
+    parser.add_argument("--HMM", action="store_true", default=True)
+    parser.add_argument("--no-HMM", dest="HMM", action="store_false")
+    parser.add_argument("--ref_group_names", nargs="+", default=["normal"], help="Reference group names for infercnv (default: normal)")
     args = parser.parse_args()
 
     main(args)

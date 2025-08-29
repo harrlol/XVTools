@@ -6,6 +6,11 @@ JOB_NAME="infercnv_azure_${t_start}"
 N_PARALLEL=4
 N_THREADS=4
 
+HMM=true
+DENOISE=true
+CUTOFF=0.1
+REG_GROUP_NAMES="normal"
+
 usage() {
   echo "Usage: $0 -I DATA_INPUT_DIR -O OUTPUT_DIR [-N JOB_NAME] [-P N_PARALLEL] [-T N_THREADS]"
   echo "  -I   (required) Path to input data directory (h5ad/mtx)"
@@ -26,6 +31,7 @@ while getopts ":I:O:N:P:T:h" opt; do
     N) JOB_NAME="$OPTARG" ;;
     P) N_PARALLEL="$OPTARG" ;;
     T) N_THREADS="$OPTARG" ;;
+    R) REG_GROUP_NAMES="$OPTARG" ;;
     h) usage; exit 0 ;;
     \?) echo "Error: Unknown option -$OPTARG" >&2; usage; exit 1 ;;
     :)  echo "Error: Option -$OPTARG requires an argument." >&2; usage; exit 1 ;;
@@ -40,7 +46,7 @@ shift $((OPTIND-1))
 mkdir -p "$OUT_FOLDER"
 
 # environment variables
-export JOB_NAME DATA_FOLDER OUT_FOLDER N_PARALLEL N_THREADS
+export JOB_NAME DATA_FOLDER OUT_FOLDER N_PARALLEL N_THREADS HMM DENOISE CUTOFF REG_GROUP_NAMES
 
 # begin and make yml file
 echo "[Local] Start time: $t_start"
