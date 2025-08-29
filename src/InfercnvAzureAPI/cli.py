@@ -21,7 +21,14 @@ def _worker(f_path, out_folder, cell_type_col, num_threads, worker_msg):
 
         # patch 8/29, allow gene_ordering_file.txt to be downloaded on the spot under mtx
         if not Path(gene_order_path).exists():
+            print("[Azure] Fetching gene ordering file...")
             urllib.request.urlretrieve("https://data.broadinstitute.org/Trinity/CTAT/cnv/hg38_gencode_v27.txt", gene_order_path)
+            if Path(gene_order_path).exists():
+                print(f"[Azure] Gene ordering file successfully saved at {gene_order_path}")
+            else:
+                raise FileNotFoundError(
+                    f"[Azure][ERROR] Download attempted but gene ordering file not found at {gene_order_path}"
+                )
 
         missing = [p for p in (matrix_path, sample_annotations_path, gene_order_path) if not Path(p).exists()]
         if missing:
