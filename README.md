@@ -6,7 +6,7 @@ I recommend running this in a tmux session for infercnv output to be automatical
 ```
 git clone https://github.com/harrlol/InfercnvAzureAPI.git
 cd InfercnvAzureAPI
-./docker-shell.sh \
+sh ./docker-shell.sh \
   -I PATH_TO_DATA_FOLDER \
   -O PATH_TO_OUTPUT_FOLDER
 ```
