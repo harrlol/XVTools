@@ -2,6 +2,7 @@ Ex Vivo internal API application for running InferCNV on Microsoft compute
 
 ## Installation and Usage
 
+I recommend running this in a tmux session for infercnv output to be automatically fetched to local. Please also monitor Azure UI for debugging.
 ```
 git clone https://github.com/harrlol/InfercnvAzureAPI.git
 cd InfercnvAzureAPI
