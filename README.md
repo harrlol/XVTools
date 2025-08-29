@@ -1,4 +1,4 @@
-Ex Vivo internal API application for running InferCNV on Microsoft compute
+Ex Vivo internal API application for running InferCNV on Microsoft compute. Using this requires MSR credentials and Azure to be already setup.
 
 ## Installation and Usage
 Please strictly follow the naming convention as outlined [here](https://github.com/broadinstitute/inferCNV/wiki/Running-InferCNV#infercnv-2-step-execution-overview) on InferCNV wiki. Data folder should either be a folder of h5ad's, or a folder of sample folders each containing the necessary infercnv files for each sample.
