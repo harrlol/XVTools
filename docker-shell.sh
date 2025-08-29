@@ -72,7 +72,7 @@ while true; do
         echo "[$T] job failed, exiting"
         CONT=0
         break
-    elif echo "$S" | grep -qE "completed"; then
+    elif echo "$S" | grep -qE "completed|pass"; then
         echo "[$T] job completed, proceeding to download results"
         CONT=1
         break

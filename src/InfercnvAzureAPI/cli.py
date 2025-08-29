@@ -51,7 +51,7 @@ def main(args=None):
     data_p = Path(args.data_folder)
 
     h5ads = sorted([p for p in data_p.iterdir() if p.is_file() and p.suffix.lower() == ".h5ad"])
-    mtx_dirs = sorted({p.parent for p in data_p.rglob("*.mtx")})
+    mtx_dirs = sorted({p.parent for p in data_p.rglob("*.matrix")})
 
     if h5ads:
         print("[Azure] Detected .h5ad files, proceeding in h5ad mode.")
@@ -62,8 +62,9 @@ def main(args=None):
         worker_msg = "mtx"
         f_list = mtx_dirs
     else:
-        print("[Azure] No .h5ad or .mtx files found.")
-        return
+        raise FileNotFoundError(
+        "[Azure] No .h5ad or .mtx files found in input folder."
+    )
 
     tasks = [(str(f), args.out_folder, args.cell_type_col, args.n_threads, worker_msg) for f in f_list]
     with Pool(processes=args.n_parallel) as pool:
