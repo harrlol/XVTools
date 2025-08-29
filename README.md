@@ -4,9 +4,14 @@ Ex Vivo internal API application for running InferCNV on Microsoft compute
 
 I recommend running this in a tmux session for infercnv output to be automatically fetched to local. Please also monitor Azure UI for debugging.
 ```
+# make sure you are setup with authentication
+conda activate amlt10
+az login
+
+# install and run
 git clone https://github.com/harrlol/InfercnvAzureAPI.git
 cd InfercnvAzureAPI
-sh ./docker-shell.sh \
+. ./docker-shell.sh \
   -I PATH_TO_DATA_FOLDER \
   -O PATH_TO_OUTPUT_FOLDER
 ```
