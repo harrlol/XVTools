@@ -21,7 +21,6 @@ def _worker(f_path, out_folder, cell_type_col, num_threads, worker_msg):
 
         # patch 8/29, allow gene_ordering_file.txt to be downloaded on the spot under mtx
         if not Path(gene_order_path).exists():
-            gene_order_path = osp.abspath(osp.join(infercnv_out_path, "gene_ordering_file.txt"))
             urllib.request.urlretrieve("https://data.broadinstitute.org/Trinity/CTAT/cnv/hg38_gencode_v27.txt", gene_order_path)
 
         missing = [p for p in (matrix_path, sample_annotations_path, gene_order_path) if not Path(p).exists()]
