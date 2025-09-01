@@ -25,7 +25,7 @@ usage() {
 # Parse flags
 DATA_FOLDER=""
 OUT_FOLDER=""
-while getopts ":I:O:N:P:R:T:h" opt; do
+while getopts ":I:O:N:P:R:T:M:h" opt; do
   case "$opt" in
     I) DATA_FOLDER="$OPTARG" ;;
     O) OUT_FOLDER="$OPTARG" ;;
@@ -33,6 +33,7 @@ while getopts ":I:O:N:P:R:T:h" opt; do
     P) N_PARALLEL="$OPTARG" ;;
     T) N_THREADS="$OPTARG" ;;
     R) REF_GROUP_NAMES="$OPTARG" ;;
+    M) MALIG_NAME="$OPTARG" ;;
     h) usage; exit 0 ;;
     \?) echo "Error: Unknown option -$OPTARG" >&2; usage; exit 1 ;;
     :)  echo "Error: Option -$OPTARG requires an argument." >&2; usage; exit 1 ;;
@@ -47,7 +48,7 @@ shift $((OPTIND-1))
 mkdir -p "$OUT_FOLDER"
 
 # environment variables
-export JOB_NAME DATA_FOLDER OUT_FOLDER N_PARALLEL N_THREADS HMM DENOISE CUTOFF REF_GROUP_NAMES
+export JOB_NAME DATA_FOLDER OUT_FOLDER N_PARALLEL N_THREADS HMM DENOISE CUTOFF REF_GROUP_NAMES MALIG_NAME
 
 # begin and make yml file
 echo "[Local] Start time: $t_start"
