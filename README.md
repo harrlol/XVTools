@@ -18,7 +18,8 @@ bash ./docker-shell.sh \
   -N JOB_NAME \
   -P N_PARALLEL \
   -T N_THREADS \
-  -R "NORMAL1 NORMAL2 NORMAL3"
+  -R "NORMAL1 NORMAL2 NORMAL3" \
+  -M "malignant"
 ```
 
 ## Considerations on Parallelization
