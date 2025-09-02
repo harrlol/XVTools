@@ -129,7 +129,7 @@ if __name__ == "__main__":
     parser.add_argument("--no-denoise", dest="denoise", action="store_false")
     parser.add_argument("--HMM", action="store_true", default=True)
     parser.add_argument("--no-HMM", dest="HMM", action="store_false")
-    parser.add_argument("--ref_group_names", nargs="+", default=None, help="Reference group names for infercnv (default: None)")
+    parser.add_argument("--ref_group_names", nargs="*", default=None, help="Reference group names for infercnv (default: None)")
     parser.add_argument("--malig_name", type=str, default="malignant", help="Malignant cell type name (default: malignant)")
     args = parser.parse_args()
 
