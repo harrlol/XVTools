@@ -223,35 +223,64 @@ def prep_h5ad_for_infercnv(adata, infercnv_out_path, cell_type_col="cell_type", 
 
     return matrix_path, sample_annotations_path, gene_order_path
 
+def _r_bool(x):  # helper
+    return "TRUE" if bool(x) else "FALSE"
 
 ## main function
-def call_infercnv(matrix_path, sample_annotations_path, gene_order_path, infercnv_out_path, adata=None,
-             cutoff=0.1, denoise=True, HMM=True, cluster_by_groups=True, num_threads=4, ref_group_names=None):
+def call_infercnv(matrix_path, sample_annotations_path, gene_order_path, infercnv_out_path, ref_group_names, 
+                  adata=None, **kwargs):
     """
     Run inferCNV with the provided mtx/annotations/gene_ordering files.
     """
 
-    # subprocess call of R script
+    cutoff = kwargs.get("cutoff")
+    denoise = kwargs.get("denoise")
+    HMM = kwargs.get("HMM")
+    cluster_by_groups = kwargs.get("cluster_by_groups")
+    num_threads = kwargs.get("num_threads")
+    analysis_mode = kwargs.get("analysis_mode")
+    tumor_subcluster_partition_method = kwargs.get("tumor_subcluster_partition_method")
+    tumor_subcluster_pval = kwargs.get("tumor_subcluster_pval")
+    sd_amplifier = kwargs.get("sd_amplifier")
+    noise_logistic = kwargs.get("noise_logistic")
+    BayesMaxPNormal = kwargs.get("BayesMaxPNormal")
+
+    if not ref_group_names:
+        raise ValueError("ref_group_names must be a non-empty list (auto-infer in CLI if needed).")
+
     rscript_cmd = [
-        "Rscript",
-        r_script_path,
+        "Rscript", r_script_path,
         "--matrix", matrix_path,
         "--annotations", sample_annotations_path,
         "--gene_order", gene_order_path,
         "--out_dir", infercnv_out_path,
-        "--cutoff", str(cutoff),
-        "--ref_group_names", *ref_group_names 
-    ]
+        "--ref_group_names", *list(ref_group_names),
+    ]    
+
 
     # add additional parameters if specified
-    if denoise:
-        rscript_cmd += ["--denoise", "TRUE"]
-    if HMM:
-        rscript_cmd += ["--HMM", "TRUE"]
-    if cluster_by_groups:
-        rscript_cmd += ["--cluster_by_groups", "TRUE"]
-    if num_threads:
-        rscript_cmd += ["--num_threads", str(num_threads)]
+    if cutoff is not None:
+        rscript_cmd += ["--cutoff", str(cutoff)]
+    if analysis_mode:
+        rscript_cmd += ["--analysis_mode", str(analysis_mode)]
+    if cluster_by_groups is not None:
+        rscript_cmd += ["--cluster_by_groups", _r_bool(cluster_by_groups)]
+    if denoise is not None:
+        rscript_cmd += ["--denoise", _r_bool(denoise)]
+    if tumor_subcluster_partition_method:
+        rscript_cmd += ["--tumor_subcluster_partition_method", str(tumor_subcluster_partition_method)]
+    if tumor_subcluster_pval is not None:
+        rscript_cmd += ["--tumor_subcluster_pval", str(tumor_subcluster_pval)]
+    if num_threads is not None:
+        rscript_cmd += ["--num_threads", str(int(num_threads))]
+    if sd_amplifier is not None:
+        rscript_cmd += ["--sd_amplifier", str(sd_amplifier)]
+    if noise_logistic is not None:
+        rscript_cmd += ["--noise_logistic", _r_bool(noise_logistic)]
+    if HMM is not None:
+        rscript_cmd += ["--HMM", _r_bool(HMM)]
+    if BayesMaxPNormal is not None:
+        rscript_cmd += ["--BayesMaxPNormal", str(BayesMaxPNormal)]
 
     # do the call
     result = subprocess.run(

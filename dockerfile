@@ -39,9 +39,7 @@ RUN python3 -m pip install --upgrade pip \
  && if [ -f /tmp/requirements.txt ]; then pip install -r /tmp/requirements.txt; fi \
  || pip install anndata scanpy pandas numpy scipy h5py tqdm google-cloud-storage google-auth
 
-
 WORKDIR /app
 COPY . /app
-ENV R_HELPER=/app/R/src/infercnv_helper.R
 
 CMD ["/bin/bash"]

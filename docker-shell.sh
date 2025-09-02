@@ -51,8 +51,35 @@ shift $((OPTIND-1))
 [[ -d "$DATA_FOLDER" ]] || { echo "Error: DATA_FOLDER does not exist: $DATA_FOLDER" >&2; exit 1; }
 mkdir -p "$OUT_FOLDER"
 
+REF_ARG=""
+[[ -n "${REF_GROUP_NAMES:-}" ]] && REF_ARG="--ref_group_names ${REF_GROUP_NAMES}"
+
+MALIG_ARG=""
+[[ -n "${MALIG_NAME:-}" ]] && MALIG_ARG="--malig_name ${MALIG_NAME}"
+
+OPTS_ARG=""
+[[ -n "${CUTOFF:-}" ]] && OPTS_ARG+=" --cutoff ${CUTOFF}"
+if [[ -n "${DENOISE:-}" ]]; then
+  if [[ "${DENOISE,,}" == "true" ]]; then OPTS_ARG+=" --denoise"; else OPTS_ARG+=" --no-denoise"; fi
+fi
+if [[ -n "${HMM:-}" ]]; then
+  if [[ "${HMM,,}" == "true" ]]; then OPTS_ARG+=" --HMM"; else OPTS_ARG+=" --no-HMM"; fi
+fi
+[[ -n "${ANALYSIS_MODE:-}" ]] && OPTS_ARG+=" --analysis_mode ${ANALYSIS_MODE}"
+if [[ -n "${CLUSTER_BY_GROUPS:-}" ]]; then
+  [[ "${CLUSTER_BY_GROUPS,,}" == "true" ]] && OPTS_ARG+=" --cluster_by_groups"
+fi
+[[ -n "${TUMOR_SUBCLUSTER_PARTITION_METHOD:-}" ]] && OPTS_ARG+=" --tumor_subcluster_partition_method ${TUMOR_SUBCLUSTER_PARTITION_METHOD}"
+[[ -n "${TUMOR_SUBCLUSTER_PVAL:-}" ]] && OPTS_ARG+=" --tumor_subcluster_pval ${TUMOR_SUBCLUSTER_PVAL}"
+[[ -n "${SD_AMPLIFIER:-}" ]] && OPTS_ARG+=" --sd_amplifier ${SD_AMPLIFIER}"
+if [[ -n "${NOISE_LOGISTIC:-}" ]]; then
+  if [[ "${NOISE_LOGISTIC,,}" == "true" ]]; then OPTS_ARG+=" --noise_logistic"; else OPTS_ARG+=" --no-noise_logistic"; fi
+fi
+[[ -n "${BAYES_MAX_P_NORMAL:-}" ]] && OPTS_ARG+=" --BayesMaxPNormal ${BAYES_MAX_P_NORMAL}"
+
+
 # environment variables
-export JOB_NAME DATA_FOLDER OUT_FOLDER N_PARALLEL N_THREADS HMM DENOISE CUTOFF REF_GROUP_NAMES MALIG_NAME SKU
+export JOB_NAME DATA_FOLDER OUT_FOLDER N_PARALLEL N_THREADS SKU REF_ARG MALIG_ARG OPTS_ARG
 
 # begin and make yml file
 echo "[Local] Start time: $t_start"

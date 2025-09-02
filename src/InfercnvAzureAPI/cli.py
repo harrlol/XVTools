@@ -2,10 +2,11 @@ import os
 import argparse
 import scanpy as sc
 from pathlib import Path
+import urllib.request
 from _util import *
 from multiprocessing import Pool
 
-def _worker(f_path, out_folder, cell_type_col, num_threads, worker_msg, **kwargs):
+def _worker(f_path, out_folder, cell_type_col, worker_msg, **kwargs):
     f_path = Path(f_path)
     sample_name = f_path.stem
     infercnv_out_path = Path(out_folder) / sample_name
@@ -62,7 +63,7 @@ def _worker(f_path, out_folder, cell_type_col, num_threads, worker_msg, **kwargs
     # pass paths to infercnv
     print(f"[Azure] Starting infercnv for {sample_name} ...")
     adata = call_infercnv(matrix_path, sample_annotations_path, gene_order_path, str(infercnv_out_path), 
-                          adata=adata, num_threads=num_threads, **kwargs)
+                          adata=adata, **kwargs)
 
     # adata is not none only in h5ad mode
     if adata is not None:
@@ -72,8 +73,8 @@ def _worker(f_path, out_folder, cell_type_col, num_threads, worker_msg, **kwargs
 
     return sample_name
 
-def _worker_wrapper(f_path, out_folder, cell_type_col, num_threads, worker_msg, infercnv_kwargs):
-    return _worker(f_path, out_folder, cell_type_col, num_threads, worker_msg, **infercnv_kwargs)
+def _worker_wrapper(f_path, out_folder, cell_type_col, worker_msg, infercnv_kwargs):
+    return _worker(f_path, out_folder, cell_type_col, worker_msg, **infercnv_kwargs)
 
 def main(args=None):
     print("[Azure] CLI Arguments", args)
@@ -100,12 +101,23 @@ def main(args=None):
     )
 
     infercnv_kwargs = {
-        k: getattr(args, k)
-        for k in ("cutoff", "denoise", "HMM", "ref_group_names", "malig_name")
+        "cutoff": args.cutoff,
+        "denoise": args.denoise,
+        "HMM": args.HMM,
+        "ref_group_names": args.ref_group_names,
+        "malig_name": args.malig_name,
+        "num_threads": args.n_threads,
+        "analysis_mode": args.analysis_mode,
+        "cluster_by_groups": args.cluster_by_groups,
+        "tumor_subcluster_partition_method": args.tumor_subcluster_partition_method,
+        "tumor_subcluster_pval": args.tumor_subcluster_pval,
+        "sd_amplifier": args.sd_amplifier,
+        "noise_logistic": args.noise_logistic,
+        "BayesMaxPNormal": args.BayesMaxPNormal,
     }
 
     tasks = [
-        (str(f), args.out_folder, args.cell_type_col, args.n_threads, worker_msg, infercnv_kwargs)
+        (str(f), args.out_folder, args.cell_type_col, worker_msg, infercnv_kwargs)
         for f in f_list
     ]
 
@@ -120,6 +132,7 @@ if __name__ == "__main__":
     # path to local h5ad files
     parser.add_argument("--data_folder", type=str, required=True, help="Path to local data files folder")
     parser.add_argument("--out_folder", type=str, required=True, help="Path to local output folder")
+    parser.add_argument("--ref_group_names", nargs="*", default=None, help="Reference group names for infercnv (default: None)")
     parser.add_argument("--n_parallel", type=int, required=True, help="Number of samples to process in parallel")
     parser.add_argument("--n_threads", type=int, default=4, help="Number of threads allowed per sample")
     parser.add_argument("--cell_type_col", type=str, default="cell_type_infercnv", help="Column name for cell type")
@@ -129,8 +142,16 @@ if __name__ == "__main__":
     parser.add_argument("--no-denoise", dest="denoise", action="store_false")
     parser.add_argument("--HMM", action="store_true", default=True)
     parser.add_argument("--no-HMM", dest="HMM", action="store_false")
-    parser.add_argument("--ref_group_names", nargs="*", default=None, help="Reference group names for infercnv (default: None)")
     parser.add_argument("--malig_name", type=str, default="malignant", help="Malignant cell type name (default: malignant)")
+    parser.add_argument("--analysis_mode", type=str, default=None)
+    parser.add_argument("--cluster_by_groups", action="store_true", default=None)
+    parser.add_argument("--no-cluster_by_groups", dest="cluster_by_groups", action="store_false")
+    parser.add_argument("--tumor_subcluster_partition_method", type=str, default=None)
+    parser.add_argument("--tumor_subcluster_pval", type=float, default=None)
+    parser.add_argument("--sd_amplifier", type=float, default=None)
+    parser.add_argument("--noise_logistic", action="store_true", default=None)
+    parser.add_argument("--no-noise_logistic", dest="noise_logistic", action="store_false")
+    parser.add_argument("--BayesMaxPNormal", type=float, default=None)
     args = parser.parse_args()
 
     main(args)
