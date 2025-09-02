@@ -1,8 +1,26 @@
 Ex Vivo internal API application for running InferCNV on Microsoft compute. Using this requires MSR credentials and Azure to be already setup.
 
 ## Installation and Usage
-Please strictly follow the naming convention as outlined [here](https://github.com/broadinstitute/inferCNV/wiki/Running-InferCNV#infercnv-2-step-execution-overview) on InferCNV wiki. Data folder should either be a folder of h5ad's, or a folder of sample folders each containing the necessary infercnv files for each sample.
-I recommend running this in a tmux session for infercnv output to be automatically fetched to local. Please also monitor Azure UI for debugging.
+- Data folder should either be 1) a folder of h5ad's, or 2) a folder of sample folders each containing the necessary infercnv files for each sample. Tree structure shown below.
+- 1) ├── data
+     │    ├── sample1.h5ad
+     │    ├── sample2.h5ad
+     │    ├── sample3.h5ad
+     │    └── ...
+- 2) ├── data
+     │    ├── sample1
+     │         ├── singleCell.counts.matrix
+     │         ├── cellAnnotations.txt
+     │         ├── gene_ordering_file.txt
+     │    ├── sample2
+     │         ├── singleCell.counts.matrix
+     │         ├── cellAnnotations.txt
+     │         ├── gene_ordering_file.txt
+     │    └── ...
+
+- As shown in 2), please strictly follow the naming convention as outlined [here](https://github.com/broadinstitute/inferCNV/wiki/Running-InferCNV#infercnv-2-step-execution-overview) on the InferCNV wiki.
+- I recommend running this in a [tmux](https://github.com/tmux/tmux/wiki) session for infercnv output to be automatically fetched to local. Please also monitor Azure UI for debugging.
+  
 ```
 # make sure you are setup with authentication
 conda activate amlt10
