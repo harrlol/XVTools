@@ -5,6 +5,7 @@ t_start="$(TZ=America/New_York date +'%Y%m%d_%H%M%S')"
 JOB_NAME="infercnv_azure_${t_start}"
 N_PARALLEL=4
 N_THREADS=4
+SKU="8C15"
 
 HMM=true
 DENOISE=true
@@ -19,13 +20,16 @@ usage() {
   echo "  -P   Optional process parallelism (default: 4)"
   echo "  -T   Optional threads per process (default: 4)"
   echo "  -R   Optional reference group names, space-separated (default: normal)"
+  echo "  -M   Optional malignant cell group name (default: none)"
+  echo "  -S   Optional Azure VM SKU (default: 8C15)"
+  echo "       Note: Ensure the chosen SKU is available in your Azure region."
   echo "  -h   Show this help"
 }
 
 # Parse flags
 DATA_FOLDER=""
 OUT_FOLDER=""
-while getopts ":I:O:N:P:R:T:M:h" opt; do
+while getopts ":I:O:N:P:R:T:M:S:h" opt; do
   case "$opt" in
     I) DATA_FOLDER="$OPTARG" ;;
     O) OUT_FOLDER="$OPTARG" ;;
@@ -34,6 +38,7 @@ while getopts ":I:O:N:P:R:T:M:h" opt; do
     T) N_THREADS="$OPTARG" ;;
     R) REF_GROUP_NAMES="$OPTARG" ;;
     M) MALIG_NAME="$OPTARG" ;;
+    S) SKU="$OPTARG" ;;
     h) usage; exit 0 ;;
     \?) echo "Error: Unknown option -$OPTARG" >&2; usage; exit 1 ;;
     :)  echo "Error: Option -$OPTARG requires an argument." >&2; usage; exit 1 ;;
@@ -48,7 +53,7 @@ shift $((OPTIND-1))
 mkdir -p "$OUT_FOLDER"
 
 # environment variables
-export JOB_NAME DATA_FOLDER OUT_FOLDER N_PARALLEL N_THREADS HMM DENOISE CUTOFF REF_GROUP_NAMES MALIG_NAME
+export JOB_NAME DATA_FOLDER OUT_FOLDER N_PARALLEL N_THREADS HMM DENOISE CUTOFF REF_GROUP_NAMES MALIG_NAME SKU
 
 # begin and make yml file
 echo "[Local] Start time: $t_start"
@@ -70,8 +75,9 @@ echo "[Local] This program will check job status every 2 minutes..."
 while true; do
     T="$(TZ=America/New_York date +'%Y%m%d_%H%M%S')"
     S="$(amlt status "$JOB_NAME")"
+    STATUS="$(echo "$S" | grep -oE 'queued|scheduling|preparing|starting|running|failed|canceled|completed')"
     if echo "$S" | grep -qE "queued|scheduling|preparing|starting|running"; then
-        echo "[$T] status check"
+        echo "[$T] status check: $STATUS"
         # echo "-------most recent log-------"
         # { amlt logs "$JOB_NAME" 2>/dev/null || true; } | tail -n 20
         # echo "-----------------------------"
