@@ -43,11 +43,13 @@ def _worker(f_path, out_folder, cell_type_col, num_threads, worker_msg, **kwargs
     
     # patch 9/1, auto infer ref_group_names if not provided
     if "ref_group_names" not in kwargs or not kwargs["ref_group_names"]:
+        
+        print(f"[Azure] Auto inferring reference group names...")
         malig_name = kwargs.pop("malig_name", None)  # pops malig before kwargs reach call_infercnv
         if malig_name is None:
             raise ValueError("[Azure][ERROR] 'malig_name' must be provided if ref_group_names not set.")
         
-        print(f"[Azure] Auto inferring reference group names, excluding malignant group name: {malig_name} ...")
+        print(f"[Azure] Eexcluding malignant group name: {malig_name} ...")
         df = pd.read_csv(sample_annotations_path, sep="\t", header=None)
 
         if malig_name not in df[1].unique().tolist():

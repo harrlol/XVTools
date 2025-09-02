@@ -10,7 +10,6 @@ SKU="8C15"
 HMM=true
 DENOISE=true
 CUTOFF=0.1
-REF_GROUP_NAMES="normal"
 
 usage() {
   echo "Usage: $0 -I DATA_INPUT_DIR -O OUTPUT_DIR [-N JOB_NAME] [-P N_PARALLEL] [-T N_THREADS]"
