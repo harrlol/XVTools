@@ -4,7 +4,7 @@
 t_start="$(TZ=America/New_York date +'%Y%m%d_%H%M%S')"
 JOB_NAME="infercnv_azure_${t_start}"
 N_PARALLEL=4
-N_THREADS=4
+N_THREADS=2
 SKU="8C15"
 
 HMM=true
