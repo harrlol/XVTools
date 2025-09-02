@@ -2,6 +2,7 @@ Ex Vivo internal API application for running InferCNV on Microsoft compute. Usin
 
 ## Installation and Usage
 - Data folder should either be 1) a folder of h5ad's, or 2) a folder of sample folders each containing the necessary infercnv files for each sample. Tree structure shown below.
+```
 - 1) ├── data
      │    ├── sample1.h5ad
      │    ├── sample2.h5ad
@@ -17,6 +18,7 @@ Ex Vivo internal API application for running InferCNV on Microsoft compute. Usin
      │         ├── cellAnnotations.txt
      │         ├── gene_ordering_file.txt
      │    └── ...
+```
 
 - As shown in 2), please strictly follow the naming convention as outlined [here](https://github.com/broadinstitute/inferCNV/wiki/Running-InferCNV#infercnv-2-step-execution-overview) on the InferCNV wiki.
 - I recommend running this in a [tmux](https://github.com/tmux/tmux/wiki) session for infercnv output to be automatically fetched to local. Please also monitor Azure UI for debugging.
