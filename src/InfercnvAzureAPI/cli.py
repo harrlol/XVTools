@@ -55,7 +55,11 @@ def _worker(f_path, out_folder, cell_type_col, worker_msg, **kwargs):
 
         if malig_name not in df[1].unique().tolist():
             raise ValueError(f"Malignant cell group name '{malig_name}' not found in cell annotations, cannot auto infer reference group names.")
-        auto_ref_names = [g for g in df[1].unique().tolist() if g != malig_name]
+        auto_ref_names = [g for g in df[1].unique().tolist() if (g != malig_name) and (df[1].value_counts()[g] > 1)]        # patched for keeping only groups with >1 cell
+
+        # TODO: implement backup case if all groups are small
+        if not auto_ref_names:
+            raise ValueError(f"[Azure][ERROR] No valid reference group names found after excluding '{malig_name}'. Please manually set ref_group_names.")
 
         kwargs["ref_group_names"] = auto_ref_names
         print(f"[Azure] Inferred reference group names: {kwargs['ref_group_names']}")

@@ -257,7 +257,6 @@ def call_infercnv(matrix_path, sample_annotations_path, gene_order_path, infercn
         "--ref_group_names", *list(ref_group_names),
     ]    
 
-
     # add additional parameters if specified
     if cutoff is not None:
         rscript_cmd += ["--cutoff", str(cutoff)]
