@@ -29,6 +29,10 @@ parser$add_argument("--BayesMaxPNormal", type="numeric", default=0.2, help="Baye
 
 args <- parser$parse_args()
 
+# print arguments for logging/debugging
+print("Arguments:")
+print(args)
+
 # create object
 infercnv_obj <- CreateInfercnvObject(
   raw_counts_matrix = args$matrix,
