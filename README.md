@@ -1,6 +1,18 @@
-Ex Vivo internal API application for running various bioinformatic utilities on Microsoft compute. Using this requires MSR credentials and Azure to be already setup, and sometimes valid access to the Terra service accounts. 
+Ex Vivo internal application for running various bioinformatic utilities on Microsoft compute. Using this requires 
 
 ## Installation and Usage
+```
+git 
+pip install .
+```
+```
+xvtools download terra \
+  --secret sa.json \
+  --gcs-dir gs://<bucket>/PRISM_pilot/analysis/ \
+  --dest ./data/patient123 \
+  --pattern '*filtered*matrix*' \
+  --exclude '.bam,.bai,.fastq,.fastq.gz,.fq,.fq.gz'
+```
 - Data folder should either be 1) a folder of h5ad's, or 2) a folder of sample folders each containing the necessary infercnv files for each sample. Tree structure shown below.
 ```
 1) ├── data/
