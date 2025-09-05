@@ -1,0 +1,17 @@
+Metadata-Version: 2.4
+Name: xvtools
+Version: 0.1.0
+Requires-Python: >=3.10
+License-File: LICENSE.txt
+Requires-Dist: typer>=0.12
+Requires-Dist: rich>=13.7
+Requires-Dist: tqdm>=4.66
+Requires-Dist: google-cloud-storage>=2.16
+Requires-Dist: numpy
+Requires-Dist: scipy
+Requires-Dist: pandas
+Requires-Dist: anndata
+Requires-Dist: scanpy>=1.11.1
+Requires-Dist: h5py
+Requires-Dist: matplotlib
+Dynamic: license-file

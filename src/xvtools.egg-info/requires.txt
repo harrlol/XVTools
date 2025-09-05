@@ -1,0 +1,11 @@
+typer>=0.12
+rich>=13.7
+tqdm>=4.66
+google-cloud-storage>=2.16
+numpy
+scipy
+pandas
+anndata
+scanpy>=1.11.1
+h5py
+matplotlib

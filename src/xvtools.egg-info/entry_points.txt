@@ -1,0 +1,2 @@
+[console_scripts]
+xvtools = xvtools.cli:main

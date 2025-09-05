@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xvtools"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+  "typer>=0.12",
+  "rich>=13.7",
+  "tqdm>=4.66",
+  "google-cloud-storage>=2.16",
+  "numpy", 
+  "scipy",
+  "pandas",
+  "anndata",
+  "scanpy>=1.11.1",
+  "h5py",
+  "matplotlib",
+]
+
+[project.scripts]
+xvtools = "xvtools.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["xvtools", "xvtools.commands", "InfercnvAzureAPI"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+xvtools = ["templates/*"]
