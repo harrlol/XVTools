@@ -1,4 +1,4 @@
-Ex Vivo internal application for running various bioinformatic utilities on Microsoft compute. Using this requires 
+Ex Vivo internal application for running various bioinformatic utilities on Microsoft compute. Set up your amulet project and workspace as guided [here](https://deep-acapella-f1a.notion.site/Guide-to-your-sandbox-201d503097798026848be26e307b619e) prior to using this tool. 
 
 ## Installation and Usage
 ```
@@ -21,6 +21,8 @@ xvtools submit infercnv-aml \
   --n-parallel 4 --n-threads 2 --sku 8C15 \
   --malig-name malignant
 ```
+
+## Notes on file structures
 - Data folder should either be 1) a folder of h5ad's, or 2) a folder of sample folders each containing the necessary infercnv files for each sample. Tree structure shown below.
 ```
 1) ├── data/
