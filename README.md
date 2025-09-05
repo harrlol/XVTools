@@ -2,9 +2,9 @@ Ex Vivo internal application for running various bioinformatic utilities on Micr
 
 ## Installation and Usage
 ```
-git 
-pip install .
+git clone https://github.com/harrlol/XVTools.git && cd XVTools && pip install .
 ```
+Download data from Terra to Microsoft sandbox
 ```
 xvtools download terra \
   --secret sa.json \
@@ -12,6 +12,14 @@ xvtools download terra \
   --dest ./data/patient123 \
   --pattern '*filtered*matrix*' \
   --exclude '.bam,.bai,.fastq,.fastq.gz,.fq,.fq.gz'
+```
+Submit infercnv job to azure
+```
+xvtools submit infercnv-aml \
+  --data ./data/patient123 \
+  --out ./out/patient123 \
+  --n-parallel 4 --n-threads 2 --sku 8C15 \
+  --malig-name malignant
 ```
 - Data folder should either be 1) a folder of h5ad's, or 2) a folder of sample folders each containing the necessary infercnv files for each sample. Tree structure shown below.
 ```
