@@ -1,4 +1,4 @@
-Ex Vivo internal API application for running InferCNV on Microsoft compute. Using this requires MSR credentials and Azure to be already setup.
+Ex Vivo internal API application for running various bioinformatic utilities on Microsoft compute. Using this requires MSR credentials and Azure to be already setup, and sometimes valid access to the Terra service accounts. 
 
 ## Installation and Usage
 - Data folder should either be 1) a folder of h5ad's, or 2) a folder of sample folders each containing the necessary infercnv files for each sample. Tree structure shown below.
