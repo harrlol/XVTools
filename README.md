@@ -1,4 +1,4 @@
-Ex Vivo internal application for running various bioinformatic utilities on Microsoft compute. Set up your amulet project and workspace as guided [here](https://deep-acapella-f1a.notion.site/Guide-to-your-sandbox-201d503097798026848be26e307b619e) prior to using this tool. 
+Project Ex Vivo internal application for running various bioinformatic utilities on Microsoft compute. Set up your amulet project and workspace as guided [here](https://deep-acapella-f1a.notion.site/Guide-to-your-sandbox-201d503097798026848be26e307b619e) prior to using this tool. 
 
 ## Installation and Usage
 ```
