@@ -47,7 +47,7 @@ xvtools submit infercnv-aml \
    │    └── ...
 ```
 
-- As shown in 2), please strictly follow the naming convention as outlined [here](https://github.com/broadinstitute/inferCNV/wiki/Running-InferCNV#infercnv-2-step-execution-overview) on the InferCNV wiki.
+- As shown in 2), please strictly follow the naming convention as outlined [here](https://github.com/broadinstitute/inferCNV/wiki/Running-InferCNV#infercnv-2-step-execution-overview:~:text=raw_counts_matrix%3D%22singleCell.counts,ref_group_names%3Dc(%22normal%22)) on the InferCNV wiki.
 - I recommend running this in a [tmux](https://github.com/tmux/tmux/wiki) session for infercnv output to be automatically fetched to local. Please also monitor Azure UI for debugging.
   
 ## Considerations on Parallelization
