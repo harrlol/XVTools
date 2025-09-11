@@ -45,7 +45,20 @@ def _worker(f_path, out_folder, cell_type_col, worker_msg, **kwargs):
     # 9/11 patch: require ref_group_names
     if kwargs.get("ref_group_names", None) is None:
         raise ValueError("[Azure][ERROR] 'ref_group_name' must be provided.")
-
+    
+    # 9/11 patch: check ref_group_names is surjective
+    ref_names = kwargs.get("ref_group_names", [])
+    ann = pd.read_csv(sample_annotations_path, sep="\t", header=0, index_col=0)
+    ann_groups = set(ann[cell_type_col].unique())
+    missing_refs = [r for r in ref_names if r not in ann_groups]
+    candidate_malig = [g for g in ann_groups if g not in ref_names]
+    if missing_refs:
+        raise ValueError(f"[Azure][ERROR] ref_group_names {missing_refs} not found in sample annotations groups {ann_groups}.")
+    if len(candidate_malig) == 0:
+        raise ValueError(f"[Azure][ERROR] No malignant group found. All groups {ann_groups} are listed as references.")
+    else:
+        print(f"[Azure] The following cell type label will be considered malignant: {candidate_malig} (all others are references)")
+    
     # pass paths to infercnv
     print(f"[Azure] Starting infercnv for {sample_name} ...")
     adata = call_infercnv(matrix_path, sample_annotations_path, gene_order_path, str(infercnv_out_path), 
