@@ -42,27 +42,9 @@ def _worker(f_path, out_folder, cell_type_col, worker_msg, **kwargs):
     else:
         raise ValueError("worker_msg must be either 'mtx' or 'h5ad'.")
     
-    # patch 9/1, auto infer ref_group_names if not provided
-    if "ref_group_names" not in kwargs or not kwargs["ref_group_names"]:
-        
-        print(f"[Azure] Auto inferring reference group names...")
-        malig_name = kwargs.pop("malig_name", None)  # pops malig before kwargs reach call_infercnv
-        if malig_name is None:
-            raise ValueError("[Azure][ERROR] 'malig_name' must be provided if ref_group_names not set.")
-        
-        print(f"[Azure] Eexcluding malignant group name: {malig_name} ...")
-        df = pd.read_csv(sample_annotations_path, sep="\t", header=None)
-
-        if malig_name not in df[1].unique().tolist():
-            raise ValueError(f"Malignant cell group name '{malig_name}' not found in cell annotations, cannot auto infer reference group names.")
-        auto_ref_names = [g for g in df[1].unique().tolist() if (g != malig_name) and (df[1].value_counts()[g] > 1)]        # patched for keeping only groups with >1 cell
-
-        # TODO: implement backup case if all groups are small
-        if not auto_ref_names:
-            raise ValueError(f"[Azure][ERROR] No valid reference group names found after excluding '{malig_name}'. Please manually set ref_group_names.")
-
-        kwargs["ref_group_names"] = auto_ref_names
-        print(f"[Azure] Inferred reference group names: {kwargs['ref_group_names']}")
+    # 9/11 patch: require ref_group_names
+    if kwargs.get("ref_group_names", None) is None:
+        raise ValueError("[Azure][ERROR] 'ref_group_name' must be provided.")
 
     # pass paths to infercnv
     print(f"[Azure] Starting infercnv for {sample_name} ...")
@@ -109,7 +91,6 @@ def main(args=None):
         "denoise": args.denoise,
         "HMM": args.HMM,
         "ref_group_names": args.ref_group_names,
-        "malig_name": args.malig_name,
         "num_threads": args.n_threads,
         "analysis_mode": args.analysis_mode,
         "cluster_by_groups": args.cluster_by_groups,
@@ -136,9 +117,9 @@ if __name__ == "__main__":
     # path to local h5ad files
     parser.add_argument("--data_folder", type=str, required=True, help="Path to local data files folder")
     parser.add_argument("--out_folder", type=str, required=True, help="Path to local output folder")
-    parser.add_argument("--ref_group_names", nargs="*", default=None, help="Reference group names for infercnv (default: None)")
+    parser.add_argument("--ref_group_names", nargs="*", required=True, help="Reference group names for infercnv")
     parser.add_argument("--n_parallel", type=int, required=True, help="Number of samples to process in parallel")
-    parser.add_argument("--n_threads", type=int, default=4, help="Number of threads allowed per sample")
+    parser.add_argument("--n_threads", type=int, default=2, help="Number of threads allowed per sample")
     parser.add_argument("--cell_type_col", type=str, default="cell_type_infercnv", help="Column name for cell type")
     # infercnv parameters
     parser.add_argument("--cutoff", type=float, default=0.1, help="Cutoff for infercnv (default: 0.1)")
@@ -146,7 +127,6 @@ if __name__ == "__main__":
     parser.add_argument("--no-denoise", dest="denoise", action="store_false")
     parser.add_argument("--HMM", action="store_true", default=True)
     parser.add_argument("--no-HMM", dest="HMM", action="store_false")
-    parser.add_argument("--malig_name", type=str, default="malignant", help="Malignant cell type name (default: malignant)")
     parser.add_argument("--analysis_mode", type=str, default=None)
     parser.add_argument("--cluster_by_groups", action="store_true", default=None)
     parser.add_argument("--no-cluster_by_groups", dest="cluster_by_groups", action="store_false")

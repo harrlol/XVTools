@@ -35,8 +35,7 @@ def infercnv_aml(
     n_parallel: int = typer.Option(4),
     n_threads: int  = typer.Option(2),
     sku: str = typer.Option("8C15"),
-    ref_group_names: str = typer.Option(None, help="Space-separated, e.g. 'normal'"),
-    malig_name: str = typer.Option(None),
+    ref_group_names: list[str] = typer.Option(None, help="Space-separated, e.g. 'normal'")
     # pass-through optional knobs (add as needed)
 ):
     """
@@ -55,7 +54,6 @@ def infercnv_aml(
     env["N_THREADS"]  = str(n_threads)
     env["SKU"]        = sku
     env["REF_ARG"]    = f"--ref_group_names {ref_group_names}" if ref_group_names else ""
-    env["MALIG_ARG"]  = f"--malig_name {malig_name}" if malig_name else ""
     env["OPTS_ARG"]   = ""  # extend if you expose more switches
 
     tpl_path = Path(__file__).resolve().parents[1] / "templates" / "job_infercnv.yml.tmpl"
@@ -118,8 +116,7 @@ def infercnv_local(
     n_parallel: int = typer.Option(4),
     n_threads: int  = typer.Option(4),
     cell_type_col: str = typer.Option("cell_type"),
-    ref_group_names: list[str] = typer.Option(None),
-    malig_name: str = typer.Option("malignant"),
+    ref_group_names: list[str] = typer.Option(None)
 ):
     """
     Run your existing Python driver locally (no AML). Good for smoke tests.
@@ -136,8 +133,6 @@ def infercnv_local(
     ]
     if ref_group_names:
         argv += ["--ref_group_names", *ref_group_names]
-    if malig_name:
-        argv += ["--malig_name", malig_name]
 
     saved = sys.argv
     try:

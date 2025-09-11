@@ -16,7 +16,6 @@ usage() {
   echo "  -P   Optional process parallelism (default: 4)"
   echo "  -T   Optional threads per process (default: 4)"
   echo "  -R   Optional reference group names, space-separated (default: normal)"
-  echo "  -M   Optional malignant cell group name (default: none)"
   echo "  -S   Optional Azure VM SKU (default: 8C15)"
   echo "       Note: Ensure the chosen SKU is available in your Azure region."
   echo "  -h   Show this help"
@@ -33,7 +32,6 @@ while getopts ":I:O:N:P:R:T:M:S:h" opt; do
     P) N_PARALLEL="$OPTARG" ;;
     T) N_THREADS="$OPTARG" ;;
     R) REF_GROUP_NAMES="$OPTARG" ;;
-    M) MALIG_NAME="$OPTARG" ;;
     S) SKU="$OPTARG" ;;
     h) usage; exit 0 ;;
     \?) echo "Error: Unknown option -$OPTARG" >&2; usage; exit 1 ;;
@@ -51,8 +49,6 @@ mkdir -p "$OUT_FOLDER"
 REF_ARG=""
 [[ -n "${REF_GROUP_NAMES:-}" ]] && REF_ARG="--ref_group_names ${REF_GROUP_NAMES}"
 
-MALIG_ARG=""
-[[ -n "${MALIG_NAME:-}" ]] && MALIG_ARG="--malig_name ${MALIG_NAME}"
 
 OPTS_ARG=""
 [[ -n "${CUTOFF:-}" ]] && OPTS_ARG+=" --cutoff ${CUTOFF}"
@@ -76,7 +72,7 @@ fi
 
 
 # environment variables
-export JOB_NAME DATA_FOLDER OUT_FOLDER N_PARALLEL N_THREADS SKU REF_ARG MALIG_ARG OPTS_ARG
+export JOB_NAME DATA_FOLDER OUT_FOLDER N_PARALLEL N_THREADS SKU REF_ARG OPTS_ARG
 
 # begin and make yml file
 echo "[Local] Start time: $t_start"
