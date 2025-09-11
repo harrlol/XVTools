@@ -20,8 +20,8 @@ Submit infercnv job to azure
 xvtools submit infercnv-aml \
   --data ./data/patient123 \
   --out ./out/patient123 \
-  --n-parallel 4 --n-threads 2 --sku 8C15 \
-  --malig-name malignant
+  --malig-name malignant \
+  --n-parallel 4 --n-threads 2 --sku 8C15
 ```
 
 ## Notes
