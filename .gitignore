@@ -6,3 +6,6 @@ user_runs/*
 
 # do not lose track of templates
 !*.yml.tmpl
+
+# don't track build
+build/*
