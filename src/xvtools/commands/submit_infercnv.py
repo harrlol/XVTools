@@ -2,11 +2,52 @@ import os, datetime, subprocess, time, re
 from pathlib import Path
 import typer
 from rich import print as rprint
+import click
+from typing import List, Optional
+import shlex, ast
 
 # Local smoke test calls your current driver:
 from InfercnvAzureAPI import cli as infercnv_cli
 
 app = typer.Typer()
+
+
+def _normalize_ref_groups(
+    ref_group_name: Optional[List[str]] = None,    # repeated flags
+    ref_group_names_seq: Optional[List[str]] = None,  # space-separated after one flag
+    ref_group_names_str: Optional[str] = None      # single string (commas/JSON/brackets)
+) -> List[str]:
+    """
+    Merge & normalize all ways the user can pass ref group names into a clean list[str].
+    Priority: explicit repeated flags > space-separated list > one big string.
+    """
+    # 1) repeated flags (highest priority if present)
+    if ref_group_name:
+        return [s.strip() for s in ref_group_name if s and s.strip()]
+
+    # 2) space-separated after one flag: Typer puts them in a list already
+    if ref_group_names_seq:
+        return [s.strip() for s in ref_group_names_seq if s and s.strip()]
+
+    # 3) single string: try to parse as Python/JSON list; fallback to comma-split; fallback to whitespace
+    if ref_group_names_str:
+        s = ref_group_names_str.strip()
+        # try literal list: "[A, B]" or "['A','B']" or '["A","B"]'
+        try:
+            lit = ast.literal_eval(s)
+            if isinstance(lit, (list, tuple)):
+                return [str(x).strip() for x in lit if str(x).strip()]
+        except Exception:
+            pass
+        # try comma-separated
+        if "," in s:
+            return [p.strip() for p in s.split(",") if p.strip()]
+        # fallback to whitespace splitting
+        parts = [p.strip() for p in s.split() if p.strip()]
+        if parts:
+            return parts
+
+    return []  # nothing provided
 
 def _run(cmd: list[str], env=None):
     p = subprocess.run(cmd, capture_output=True, text=True, env=env)
@@ -35,13 +76,21 @@ def infercnv_aml(
     n_parallel: int = typer.Option(4),
     n_threads: int  = typer.Option(2),
     sku: str = typer.Option("8C15"),
-    ref_group_names: list[str] = typer.Option(None, help="Space-separated, e.g. 'normal'")
+    ref_group_name: List[str] = typer.Option(None, "--ref-group-name", help="Repeatable flag."),
+    ref_group_names_seq: List[str] = typer.Option(None, "--ref-group-names", help="Space-separated list."),
+    ref_group_names_str: Optional[str] = typer.Option(None, "--ref-group-names-str",
+        help="Single string (commas or JSON list). e.g., --ref-group-names-str '[\"Hepatocyte\",\"T_NK\"]' or 'Hepatocyte, T_NK'"),
     # pass-through optional knobs (add as needed)
 ):
     """
     Resolve AML job YAML from template, upload data (azcopy), submit with 'amlt',
     poll, then sync outputs back.
     """
+
+    for param in app.registered_commands["infercnv-aml"].params:
+        if isinstance(param, click.Option) and ("--ref-group-names" in param.opts):
+            param.nargs = -1
+            break
 
     if not job_name:
         t = datetime.datetime.now().astimezone().strftime("%Y%m%d_%H%M%S")
@@ -53,8 +102,16 @@ def infercnv_aml(
     env["N_PARALLEL"] = str(n_parallel)
     env["N_THREADS"]  = str(n_threads)
     env["SKU"]        = sku
-    env["REF_ARG"]    = f"--ref_group_names {ref_group_names}" if ref_group_names else ""
-    env["OPTS_ARG"]   = ""  # extend if you expose more switches
+
+    ref_groups = _normalize_ref_groups(
+        ref_group_name=ref_group_name,
+        ref_group_names_seq=ref_group_names_seq,
+        ref_group_names_str=ref_group_names_str if 'ref_group_names_str' in locals() else None,
+    )
+    if not ref_groups:
+        raise typer.BadParameter("No reference groups provided. Use --ref-group-name (repeat), or --ref-group-names (space-separated), or --ref-group-names-str.")
+    # pack into env for YAML
+    env["REF_ARG"] = "--ref_group_names " + " ".join(shlex.quote(x) for x in ref_groups)
 
     tpl_path = Path(__file__).resolve().parents[1] / "templates" / "job_infercnv.yml.tmpl"
     resolved = out / "job_infercnv.resolved.yml"
