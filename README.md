@@ -20,7 +20,7 @@ Submit infercnv job to azure
 xvtools submit infercnv-aml \
   --data ./data/patient123 \
   --out ./out/patient123 \
-  --ref-group-names 'T_Cell, Macrophage, B_Cell' \
+  --ref-group-names-str 'T_Cell, Macrophage, B_Cell' \
   --n-parallel 4 --n-threads 2 --sku 8C15
 ```
 
