@@ -73,7 +73,6 @@ def infercnv_aml(
     out: Path  = typer.Option(..., help="Local output directory"),
     job_name: str = typer.Option(None, help="Override job name (default: timestamped)"),
     n_parallel: int = typer.Option(4),
-    n_threads: int  = typer.Option(2),
     sku: str = typer.Option("8C15"),
     # keep a repeatable flag if you like (user can do --ref-group-name X --ref-group-name Y)
     ref_group_name: List[str] = typer.Option(None, "--ref-group-name", help="Repeatable: --ref-group-name Hepatocyte --ref-group-name T_NK"),
@@ -86,7 +85,7 @@ def infercnv_aml(
     denoise: bool = typer.Option(True, help="Denoise the data (default: TRUE)"),
     tumor_subcluster_partition_method: str = typer.Option("random_trees", help="Tumor subcluster partition method (default: random_trees)"),
     tumor_subcluster_pval: float = typer.Option(0.05, help="Tumor subcluster p-value (default: 0.05)"),
-    num_threads: int = typer.Option(2, help="Number of threads to use (default: 2)"),
+    n_threads: int = typer.Option(2, help="Number of threads to use (default: 2)"),
     sd_amplifier: float = typer.Option(1.5, help="Standard deviation amplifier (default: 1.5)"),
     noise_logistic: bool = typer.Option(True, help="Use noise logistic (default: TRUE)"),
     HMM: bool = typer.Option(False, help="Use HMM (default: FALSE)"),
@@ -131,8 +130,8 @@ def infercnv_aml(
         opts += ["--tumor_subcluster_partition_method", tumor_subcluster_partition_method]
     if tumor_subcluster_pval is not None:
         opts += ["--tumor_subcluster_pval", str(tumor_subcluster_pval)]
-    if num_threads is not None:
-        opts += ["--num_threads", str(num_threads)]
+    if n_threads is not None:
+        opts += ["--n_threads", str(n_threads)]
     if sd_amplifier is not None:
         opts += ["--sd_amplifier", str(sd_amplifier)]
     if noise_logistic is not None:
