@@ -34,6 +34,27 @@ def _run(cmd: list[str], env=None):
         )
     return p.stdout
 
+
+def _try_sync_outputs(g_src: str, out: Path):
+    """
+    Best-effort incremental download of new/changed files.
+    Swallows 404/empty-container errors while the job is still running.
+    """
+    try:
+        _run([
+            "azcopy", "sync", g_src, str(out),
+            "--recursive", "--delete-destination=false"
+        ])
+        rprint("[dim]Partial sync: pulled latest outputs from Azure[/]")
+    except RuntimeError as e:
+        msg = str(e)
+        # Ignore expected 'not ready yet' conditions
+        if ("ResourceNotFound" in msg or "The specified resource does not exist" in msg
+            or "cannot list files" in msg or "StatusCode=404" in msg):
+            return
+        rprint(f"[yellow]Partial sync skipped:[/] {msg.splitlines()[-1]}")
+
+
 # Prefer AML shortlink if present; otherwise fall back to first URL-ish thing.
 _URL_RE_PREF = re.compile(r"https://aka\.ms/amlt\?[\w=-]+")
 _URL_RE_ANY  = re.compile(r"https?://\S+")
@@ -104,6 +125,7 @@ def infercnv_aml(
     # Submit AMLT job (requires amlt configured)
     submit_out = _run(["amlt", "run", str(resolved), "--replace", job_name, "-d", job_name], env=env)
     rprint(f"[green]Submitted[/] {job_name}")
+    g_src = f"https://exvivocoldeastus.blob.core.windows.net/projects/Projects/broad_infercnv_out/{job_name}?<SAS_TOKEN>"
 
     url = _extract_portal_url(submit_out) or _extract_portal_url(_run(["amlt", "status", job_name], env=env))
     if url:
@@ -121,20 +143,20 @@ def infercnv_aml(
             prev_status = status
 
         if status in {"queued","scheduling","preparing","starting","running"}:
+            _try_sync_outputs(g_src, out)
             time.sleep(30)
             continue
+
         if status in {"failed","canceled"}:
             rprint("[red]Job failed or canceled[/]")
+            _try_sync_outputs(g_src, out)
             return
+        
         if status in {"completed"} or "pass" in s:
             rprint("[green]Job completed[/]")
             break
 
     # Download outputs
-    # sas_out = os.environ.get("XVTOOLS_SAS_PROJECTS")
-    # if not sas_out:
-    #     raise RuntimeError("Set env XVTOOLS_SAS_PROJECTS to a SAS token for the projects container.")
-    g_src = f"https://exvivocoldeastus.blob.core.windows.net/projects/Projects/broad_infercnv_out/{job_name}?<SAS_TOKEN>"
     _run(["azcopy", "sync", g_src, str(out), "--recursive", "--delete-destination=false"])
     rprint("[cyan]Synced outputs to local[/]")
 
