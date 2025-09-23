@@ -114,6 +114,12 @@ def main(args=None):
         "BayesMaxPNormal": args.BayesMaxPNormal,
     }
 
+    # callout for any extra args specified
+    print("[Azure] Extra inferCNV options specified:")
+    for k, v in infercnv_kwargs.items():
+        if k != "ref_group_names" and v is not None:
+            print(f"   --{k} {v}")
+
     tasks = [
         (str(f), args.out_folder, args.cell_type_col, worker_msg, infercnv_kwargs)
         for f in f_list

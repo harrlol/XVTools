@@ -26,6 +26,7 @@ def _parse_groups(s: str) -> List[str]:
     # whitespace fallback
     return [p.strip() for p in s.split() if p.strip()]
 
+
 def _run(cmd: list[str], env=None):
     p = subprocess.run(cmd, capture_output=True, text=True, env=env)
     if p.returncode != 0:
@@ -79,6 +80,17 @@ def infercnv_aml(
     # single string, comma/JSON/whitespace acceptable
     ref_group_names_str: Optional[str] = typer.Option(None, "--ref-group-names-str", help="Comma/JSON list, e.g. 'Hepatocyte, T_NK' or '[\"Hepatocyte\",\"T_NK\"]'"),
     # pass-through optional knobs (add as needed)
+    cutoff: float = typer.Option(0.1, help="Cutoff for CNV detection (default: 0.1)"),
+    analysis_mode: str = typer.Option("subclusters", help="Analysis mode (default: subclusters)"),
+    cluster_by_groups: bool = typer.Option(False, help="Cluster by groups (default: FALSE)"),
+    denoise: bool = typer.Option(True, help="Denoise the data (default: TRUE)"),
+    tumor_subcluster_partition_method: str = typer.Option("random_trees", help="Tumor subcluster partition method (default: random_trees)"),
+    tumor_subcluster_pval: float = typer.Option(0.05, help="Tumor subcluster p-value (default: 0.05)"),
+    num_threads: int = typer.Option(2, help="Number of threads to use (default: 2)"),
+    sd_amplifier: float = typer.Option(1.5, help="Standard deviation amplifier (default: 1.5)"),
+    noise_logistic: bool = typer.Option(True, help="Use noise logistic (default: TRUE)"),
+    HMM: bool = typer.Option(False, help="Use HMM (default: FALSE)"),
+    BayesMaxPNormal: float = typer.Option(0.2, help="Bayes maximum P(Normal) (default: 0.2)"),
 ):
     """
     Resolve AML job YAML from template, upload data (azcopy), submit with 'amlt',
@@ -104,7 +116,32 @@ def infercnv_aml(
     if not ref_groups:
         raise typer.BadParameter("Provide reference groups via --ref-group-name (repeatable) or --ref-group-names-str.")
     env["REF_ARG"] = "--ref_group_names " + " ".join(shlex.quote(x) for x in ref_groups)
-    env["OPTS_ARG"] = ""
+
+    # optional args collection
+    opts = []
+    if cutoff is not None:
+        opts += ["--cutoff", str(cutoff)]
+    if analysis_mode:
+        opts += ["--analysis_mode", analysis_mode]
+    if cluster_by_groups is not None:
+        opts += ["--cluster_by_groups" if cluster_by_groups else "--no-cluster_by_groups"]
+    if denoise is not None:
+        opts += ["--denoise" if denoise else "--no-denoise"]
+    if tumor_subcluster_partition_method:
+        opts += ["--tumor_subcluster_partition_method", tumor_subcluster_partition_method]
+    if tumor_subcluster_pval is not None:
+        opts += ["--tumor_subcluster_pval", str(tumor_subcluster_pval)]
+    if num_threads is not None:
+        opts += ["--num_threads", str(num_threads)]
+    if sd_amplifier is not None:
+        opts += ["--sd_amplifier", str(sd_amplifier)]
+    if noise_logistic is not None:
+        opts += ["--noise_logistic" if noise_logistic else "--no-noise_logistic"]
+    if HMM is not None:
+        opts += ["--HMM" if HMM else "--no-HMM"]
+    if BayesMaxPNormal is not None:
+        opts += ["--BayesMaxPNormal", str(BayesMaxPNormal)]
+    env["OPTS_ARG"] = " ".join(opts)
 
     tpl_path = Path(__file__).resolve().parents[1] / "templates" / "job_infercnv.yml.tmpl"
     resolved = out / "job_infercnv.resolved.yml"
