@@ -90,6 +90,7 @@ def infercnv_aml(
     noise_logistic: bool = typer.Option(True, help="Use noise logistic (default: TRUE)"),
     HMM: bool = typer.Option(False, help="Use HMM (default: FALSE)"),
     BayesMaxPNormal: float = typer.Option(0.2, help="Bayes maximum P(Normal) (default: 0.2)"),
+    cell_type_col: str = typer.Option("cell_type_infercnv", help="Column name for cell type (default: cell_type_infercnv)"),
 ):
     """
     Resolve AML job YAML from template, upload data (azcopy), submit with 'amlt',
@@ -116,6 +117,13 @@ def infercnv_aml(
         raise typer.BadParameter("Provide reference groups via --ref-group-name (repeatable) or --ref-group-names-str.")
     env["REF_ARG"] = "--ref_group_names " + " ".join(shlex.quote(x) for x in ref_groups)
 
+    print("Arguments:")
+    print(env['JOB_NAME'])
+    print(env['N_PARALLEL'])
+    print(env['N_THREADS'])
+    print(env['SKU'])
+    print(env['REF_ARG'])
+
     # optional args collection
     opts = []
     if cutoff is not None:
@@ -140,7 +148,11 @@ def infercnv_aml(
         opts += ["--HMM" if HMM else "--no-HMM"]
     if BayesMaxPNormal is not None:
         opts += ["--BayesMaxPNormal", str(BayesMaxPNormal)]
+    if cell_type_col:
+        opts += ["--cell_type_col", cell_type_col]
     env["OPTS_ARG"] = " ".join(opts)
+
+    print(env['OPTS_ARG'])
 
     tpl_path = Path(__file__).resolve().parents[1] / "templates" / "job_infercnv.yml.tmpl"
     resolved = out / "job_infercnv.resolved.yml"
