@@ -278,6 +278,9 @@ def call_infercnv(matrix_path, sample_annotations_path, gene_order_path, infercn
     if BayesMaxPNormal is not None:
         rscript_cmd += ["--BayesMaxPNormal", str(BayesMaxPNormal)]
 
+    print("Running inferCNV with command:")
+    print(" ".join(rscript_cmd))
+
     # do the call
     result = subprocess.run(
         rscript_cmd,

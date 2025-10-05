@@ -62,7 +62,7 @@ def _worker(f_path, out_folder, cell_type_col, worker_msg, **kwargs):
     # pass paths to infercnv
     print(f"[Azure] Starting infercnv for {sample_name} ...")
     adata = call_infercnv(matrix_path, sample_annotations_path, gene_order_path, str(infercnv_out_path), 
-                          adata=adata, **kwargs)
+                          ref_group_names=kwargs["ref_group_names"], adata=adata, **kwargs)
 
     # adata is not none only in h5ad mode
     if adata is not None:
