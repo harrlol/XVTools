@@ -42,4 +42,6 @@ RUN python3 -m pip install --upgrade pip \
 WORKDIR /app
 COPY . /app
 
+RUN pip install -e .
+
 CMD ["/bin/bash"]

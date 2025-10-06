@@ -91,6 +91,7 @@ def infercnv_aml(
     HMM: bool = typer.Option(False, help="Use HMM (default: FALSE)"),
     BayesMaxPNormal: float = typer.Option(0.2, help="Bayes maximum P(Normal) (default: 0.2)"),
     cell_type_col: str = typer.Option("cell_type_infercnv", help="Column name for cell type (default: cell_type_infercnv)"),
+    debug_mode: bool = typer.Option(False, help="If true, run in debug mode with more verbose output.")
 ):
     """
     Resolve AML job YAML from template, upload data (azcopy), submit with 'amlt',
@@ -150,6 +151,8 @@ def infercnv_aml(
         opts += ["--BayesMaxPNormal", str(BayesMaxPNormal)]
     if cell_type_col:
         opts += ["--cell_type_col", cell_type_col]
+    if debug_mode:
+        opts += ["--debug_mode"]
     env["OPTS_ARG"] = " ".join(opts)
 
     print(env['OPTS_ARG'])

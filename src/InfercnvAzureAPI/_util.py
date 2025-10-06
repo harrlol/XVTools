@@ -240,11 +240,13 @@ def call_infercnv(matrix_path, sample_annotations_path, gene_order_path, infercn
     noise_logistic = kwargs.get("noise_logistic")
     BayesMaxPNormal = kwargs.get("BayesMaxPNormal")
 
+    # run mode
+    debug_mode = kwargs.get("debug_mode", False)
+
     if not ref_group_names:
         raise ValueError("ref_group_names must be a non-empty list (auto-infer in CLI if needed).")
 
-    r_script_path="/app/R/src/infercnv_helper.R"
-
+    r_script_path = os.getenv("R_HELPER", "/app/R/src/infercnv_helper.R")
     rscript_cmd = [
         "Rscript", r_script_path,
         "--matrix", matrix_path,
@@ -282,15 +284,18 @@ def call_infercnv(matrix_path, sample_annotations_path, gene_order_path, infercn
     print(" ".join(rscript_cmd))
 
     # do the call
-    result = subprocess.run(
-        rscript_cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True
-    )
-
-    if result.returncode != 0:
-        raise RuntimeError(f"inferCNV failed:\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}")
+    if debug_mode:
+        print("[Debug Mode] Running inferCNV in debug mode, output will be printed to console.")
+        subprocess.run(rscript_cmd, check=True)
+    else:
+        result = subprocess.run(
+            rscript_cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f"inferCNV failed:\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}")
 
     if adata is not None:
         adata = store_infercnv_in_adata(adata, infercnv_out_path)

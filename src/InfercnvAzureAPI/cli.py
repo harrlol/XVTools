@@ -3,7 +3,7 @@ import argparse
 import scanpy as sc
 from pathlib import Path
 import urllib.request
-from ._util import *
+from InfercnvAzureAPI._util import *
 from multiprocessing import Pool
 
 def _worker(f_path, out_folder, cell_type_col, worker_msg, **kwargs):
@@ -48,8 +48,8 @@ def _worker(f_path, out_folder, cell_type_col, worker_msg, **kwargs):
     
     # 9/11 patch: check ref_group_names is surjective
     ref_names = kwargs.get("ref_group_names", [])
-    ann = pd.read_csv(sample_annotations_path, sep="\t", header=0, index_col=0)
-    ann_groups = set(ann[cell_type_col].unique())
+    ann = pd.read_csv(sample_annotations_path, sep="\t", header=None)
+    ann_groups = set(ann[1].unique())
     missing_refs = [r for r in ref_names if r not in ann_groups]
     candidate_malig = [g for g in ann_groups if g not in ref_names]
     if missing_refs:
@@ -62,7 +62,7 @@ def _worker(f_path, out_folder, cell_type_col, worker_msg, **kwargs):
     # pass paths to infercnv
     print(f"[Azure] Starting infercnv for {sample_name} ...")
     adata = call_infercnv(matrix_path, sample_annotations_path, gene_order_path, str(infercnv_out_path), 
-                          ref_group_names=kwargs["ref_group_names"], adata=adata, **kwargs)
+                          adata=adata, **kwargs)
 
     # adata is not none only in h5ad mode
     if adata is not None:
@@ -112,6 +112,7 @@ def main(args=None):
         "sd_amplifier": args.sd_amplifier,
         "noise_logistic": args.noise_logistic,
         "BayesMaxPNormal": args.BayesMaxPNormal,
+        "debug_mode": args.debug_mode
     }
 
     # callout for any extra args specified
@@ -155,6 +156,7 @@ if __name__ == "__main__":
     parser.add_argument("--noise_logistic", action="store_true", default=None)
     parser.add_argument("--no-noise_logistic", dest="noise_logistic", action="store_false")
     parser.add_argument("--BayesMaxPNormal", type=float, default=None)
+    parser.add_argument("--debug_mode", action="store_true", default=False, help="If true, run in debug mode with more verbose output.")
     args = parser.parse_args()
 
     main(args)
