@@ -116,12 +116,13 @@ def cnv_state_cnt(cluster_geno, save_path=None, show=False):
     Count how many times each state appears for each grouping in a given infercnv result
     """
     level_counts = cluster_geno.apply(pd.Series.value_counts, axis=1).fillna(0).astype(int)
-    level_counts.plot(kind="bar", stacked=True, figsize=(12, 6))
+    ax = level_counts.plot(kind="bar", stacked=True, figsize=(12, 6))
     plt.xlabel("Row")
     plt.ylabel("Count of Levels")
     plt.title("Count of Float Levels per Row")
     plt.legend(title="Level")
     plt.xticks(rotation=45)
+    ax.grid(False)
     plt.tight_layout()
     if save_path:
         plt.savefig(auto_expand(save_path))
@@ -145,7 +146,7 @@ def store_infercnv_in_adata(adata, infercnv_out_path):
     
     # grouping to cnv
     infercnv_df = pd.read_csv(infercnv_files[0], sep="\t")
-    sub_infercnv_df = infercnv_df[['cell_group_name', 'state', 'gene']]
+    sub_infercnv_df = infercnv_df[['cell_group_name', 'state', 'gene_region_name', 'gene']]
     collapsed = sub_infercnv_df.groupby('cell_group_name').apply(lambda x: dict(zip(x['gene'], x['state']))).to_dict()
     cluster_geno = pd.DataFrame(collapsed).T
     cluster_geno.index = cluster_geno.index.str.split(".", n=1).str[1]

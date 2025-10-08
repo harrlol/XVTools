@@ -17,6 +17,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libzstd-dev \
  && rm -rf /var/lib/apt/lists/*
 
+# ---- Install latest R (4.4.x) from CRAN ----
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      curl gnupg ca-certificates \
+    && mkdir -p /etc/apt/keyrings \
+    && curl -fsSL https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc \
+        | gpg --dearmor -o /etc/apt/keyrings/cran-archive-keyring.gpg \
+    && echo "deb [signed-by=/etc/apt/keyrings/cran-archive-keyring.gpg] https://cloud.r-project.org/bin/linux/ubuntu jammy-cran40/" \
+        > /etc/apt/sources.list.d/cran.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends r-base r-base-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+
 # fetch, build, install
 RUN wget https://sourceforge.net/projects/mcmc-jags/files/JAGS/4.x/Source/JAGS-4.3.2.tar.gz -O JAGS-4.3.2.tar.gz \
     && tar -xzf JAGS-4.3.2.tar.gz \
@@ -28,8 +41,10 @@ RUN wget https://sourceforge.net/projects/mcmc-jags/files/JAGS/4.x/Source/JAGS-4
     && cd .. \
     && rm -rf JAGS-4.3.2*
 
-RUN Rscript -e 'if (!requireNamespace("BiocManager", quietly=TRUE)) install.packages("BiocManager", repos="https://cloud.r-project.org")' \
- && Rscript -e 'BiocManager::install("infercnv", ask=FALSE, update=FALSE)'
+RUN Rscript -e 'if (!requireNamespace("BiocManager", quietly=TRUE)) \
+      install.packages("BiocManager", repos="https://cloud.r-project.org")' \
+    && Rscript -e 'BiocManager::install(version = "3.21")' \
+    && Rscript -e 'BiocManager::install("infercnv", ask = FALSE, update = FALSE)'
 
 # RUN Rscript -e 'install.packages(c("optparse","data.table","ggplot2","reshape2","fastcluster","foreach","doParallel","futile.logger","RColorBrewer","gplots","png","Cairo"), repos="https://cloud.r-project.org")'
 
